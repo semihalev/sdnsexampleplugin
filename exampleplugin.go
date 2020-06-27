@@ -70,7 +70,7 @@ func (e *Example) ServeDNS(ctx context.Context, dc *ctx.Context) {
 		msg.Answer = append(msg.Answer, a)
 
 		w.WriteMsg(msg)
-		dc.Abort()
+		dc.Cancel()
 
 		e.plog.Info("Example request received")
 	}
