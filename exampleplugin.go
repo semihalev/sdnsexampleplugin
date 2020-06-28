@@ -7,7 +7,7 @@ import (
 	"github.com/miekg/dns"
 	"github.com/semihalev/log"
 	"github.com/semihalev/sdns/config"
-	"github.com/semihalev/sdns/ctx"
+	"github.com/semihalev/sdns/middleware"
 )
 
 // Example type
@@ -17,7 +17,7 @@ type Example struct {
 }
 
 // New return example
-func New(cfg *config.Config) ctx.Handler {
+func New(cfg *config.Config) middleware.Handler {
 	plog := log.New("plugin", name)
 
 	plog.Info("It's example plugin, loaded success")
@@ -32,7 +32,7 @@ func New(cfg *config.Config) ctx.Handler {
 func (e *Example) Name() string { return name }
 
 // ServeDNS implements the Handle interface.
-func (e *Example) ServeDNS(ctx context.Context, dc *ctx.Context) {
+func (e *Example) ServeDNS(ctx context.Context, ch *middleware.Chain) {
 	/*
 		$ dig value_1 @127.0.0.1
 
@@ -49,7 +49,7 @@ func (e *Example) ServeDNS(ctx context.Context, dc *ctx.Context) {
 		value_1.		3600	IN	A	0.0.0.0
 	*/
 
-	req, w := dc.DNSRequest, dc.DNSWriter
+	req, w := ch.Request, ch.Writer
 
 	testValue := dns.Fqdn(e.cfg["key_1"].(string))
 
@@ -70,12 +70,12 @@ func (e *Example) ServeDNS(ctx context.Context, dc *ctx.Context) {
 		msg.Answer = append(msg.Answer, a)
 
 		w.WriteMsg(msg)
-		dc.Cancel()
+		ch.Cancel()
 
 		e.plog.Info("Example request received")
 	}
 
-	dc.NextDNS(ctx)
+	ch.Next(ctx)
 }
 
 const name = "example"
